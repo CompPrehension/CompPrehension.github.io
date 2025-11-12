@@ -2,11 +2,13 @@
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "docs:preview": "vitepress preview",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@mdit-vue/plugin-toc": "^3.0.2",
     "@types/node": "^24.10.1",
+    "husky": "^9.1.7",
     "markdown-it-wikilinks": "^1.4.0",
     "mermaid": "^11.12.1",
     "vitepress": "^1.6.4",

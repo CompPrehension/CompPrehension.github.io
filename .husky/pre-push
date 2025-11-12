@@ -1,0 +1,13 @@
+#!/bin/bash
+. "$(dirname "$0")/_/husky.sh"
+
+branch="$(git symbolic-ref --short HEAD)"
+if [ "$branch" = "production" ]; then
+  echo "🛠 Checking VitePress build..."
+  npm run docs:build || {
+    echo "❌ Build failed — push aborted."
+    exit 1
+  }
+else
+  echo "Skipping build for branch '$branch'"
+fi
