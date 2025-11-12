@@ -27,7 +27,7 @@ export default withMermaid({
     toc: { level: [1, 2, 3] },
     config: (md) => {
       md.use(markdownItWikilinks);
-    }
+    },
   },
 
   locales: {
@@ -45,6 +45,11 @@ export default withMermaid({
           { text: 'Пользователям', link: '/introduction' },
           { text: 'Документация', link: '/docs' },
         ],
+
+        editLink: {
+          pattern:
+            'https://github.com/CompPrehension.github.io/edit/production/:path',
+        },
 
         sidebar: [
           {
@@ -112,6 +117,11 @@ export default withMermaid({
           { text: 'For Users', link: '/introduction' },
           { text: 'Documentation', link: '/docs' },
         ],
+
+        editLink: {
+          pattern:
+            'https://github.com/CompPrehension.github.io/edit/production/:path',
+        },
 
         sidebar: [
           {
