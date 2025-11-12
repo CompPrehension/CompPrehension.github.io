@@ -4,6 +4,7 @@ import { getAutoSidebar } from './utils/sidebar.mts';
 // @ts-ignore: no declaration for 'markdown-it-wikilinks'
 import markdownItWikilinks from 'markdown-it-wikilinks';
 
+// TODO: DRY violation
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
   title: 'CompPrehension Wiki',
@@ -48,7 +49,8 @@ export default withMermaid({
 
         editLink: {
           pattern:
-            'https://github.com/CompPrehension.github.io/edit/production/:path',
+            'https://github.com/CompPrehension/CompPrehension.github.io/edit/production/:path',
+          text: 'Редактировать на GitHub',
         },
 
         sidebar: [
@@ -120,7 +122,8 @@ export default withMermaid({
 
         editLink: {
           pattern:
-            'https://github.com/CompPrehension.github.io/edit/production/:path',
+            'https://github.com/CompPrehension/CompPrehension.github.io/edit/production/:path',
+          text: 'Edit on GitHub',
         },
 
         sidebar: [
