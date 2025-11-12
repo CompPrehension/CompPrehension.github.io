@@ -8,6 +8,7 @@ import markdownItWikilinks from 'markdown-it-wikilinks';
 export default withMermaid({
   title: 'CompPrehension Wiki',
   titleTemplate: 'CompPrehension Wiki',
+  ignoreDeadLinks: true,
   lastUpdated: true,
 
   themeConfig: {
