@@ -17,8 +17,14 @@ const locales = {
     ru: 'Введение для пользователя',
     en: 'User Introduction',
   },
+  sidebar_dt: {
+    ru: 'Деревья мыслительных процессов',
+    en: 'Thought Process Tree',
+  },
   sidebar_main: { ru: 'Основное', en: 'Main' },
   sidebar_resources: { ru: 'Навигация по проектам', en: 'Project Resources' },
+  sidebar_domain_howtocreate: { ru: 'Как создать новый домен?', en: 'How to create a new domain?' },
+  sidebar_domain_testguide: { ru: 'Руководство по тестированию домена', en: 'Domain testing guide' },
   lastUpdated: { ru: 'Последнее обновление', en: 'Last updated' },
   outlineTitle: { ru: 'На этой странице', en: 'Table of Contents' },
   githubEdit: { ru: 'Редактировать на GitHub', en: 'Edit on GitHub' },
@@ -40,24 +46,25 @@ function makeTranslations(locale: Language): (name: LocaleKey) => string {
 function getThemeConfig(locale: Language, localeVisibleName: string) {
   const normalizedLocale = defaultLocale == locale ? "root" : locale
   const t = makeTranslations(locale);
-  return {[normalizedLocale]: {
+  return {
+    [normalizedLocale]: {
       label: localeVisibleName,
       lang: locale,
-      description: t("description"),
+      description: t('description'),
 
       // Конфигурация темы для русского языка
       themeConfig: {
         nav: [
-          { text: t("home"), link: '/' },
-          { text: t("resources"), link: '/resources' },
-          { text: t("introduction"), link: '/introduction' },
-          { text: t("docs"), link: '/docs' },
+          { text: t('home'), link: '/' },
+          { text: t('resources'), link: '/resources' },
+          { text: t('introduction'), link: '/introduction' },
+          { text: t('docs'), link: '/docs' },
         ],
 
         editLink: {
           pattern:
             'https://github.com/CompPrehension/CompPrehension.github.io/edit/production/:path',
-          text: t("githubEdit"),
+          text: t('githubEdit'),
         },
 
         sidebar: [
@@ -87,16 +94,24 @@ function getThemeConfig(locale: Language, localeVisibleName: string) {
                     link: '/docs/its/domains/ctrlflow',
                     items: getAutoSidebar('/docs/its/domains/ctrlflow'),
                   },
+                  {
+                    text: t('sidebar_domain_howtocreate'),
+                    link: '/docs/its/how_to_domain',
+                  },
+                  {
+                    text: t('sidebar_domain_testguide'),
+                    link: '/docs/its/testing_guide',
+                  },
                 ],
               },
               {
-                text: 'DecisionTree',
+                text: t('sidebar_dt'),
                 collapsed: true,
                 link: '/docs/decision_tree',
                 items: getAutoSidebar('docs/decision_tree'),
               },
               {
-                text: 'MeaningTree',
+                text: 'Meaning Tree',
                 collapsed: true,
                 link: '/docs/meaning_tree',
                 items: getAutoSidebar('docs/meaning_tree'),
@@ -109,7 +124,8 @@ function getThemeConfig(locale: Language, localeVisibleName: string) {
         // Текст для оглавления
         outlineTitle: t('outlineTitle'),
       },
-    }};
+    },
+  };
 }
 
 // https://vitepress.dev/reference/site-config
@@ -132,7 +148,7 @@ export default withMermaid({
   },
 
   markdown: {
-    toc: { level: [1, 2, 3] },
+    toc: { level: [1, 2, 3, 4, 5] },
     config: (md) => {
       md.use(markdownItWikilinks);
     },
