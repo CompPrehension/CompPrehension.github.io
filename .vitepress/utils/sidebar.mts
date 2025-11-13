@@ -40,9 +40,13 @@ export function getAutoSidebar(dir: string): Array<object> {
           link: existsSync(indexPage) ? `/${dir}/${file.replace(/\.md$/, '')}` : undefined
         };
       } else if (file.endsWith('.md')) {
+        let link = `${dir}/${file.replace(/\.md$/, '')}`;
+        if (!dir.startsWith("/")) {
+          link = '/' + link;
+        }
         return {
           text: formatFilename(file),
-          link: `/${dir}/${file.replace(/\.md$/, '')}`,
+          link: link,
         };
       }
     })
