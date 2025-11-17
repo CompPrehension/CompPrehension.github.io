@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@mdit-vue/plugin-toc": "^3.0.2",
+    "@mdit/plugin-mark": "^0.22.1",
     "@types/node": "^24.10.1",
     "husky": "^9.1.7",
     "markdown-it-wikilinks": "^1.4.0",

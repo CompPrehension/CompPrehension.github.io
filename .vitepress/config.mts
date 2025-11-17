@@ -1,8 +1,11 @@
+import anchor from 'markdown-it-anchor';
 import { withMermaid } from 'vitepress-plugin-mermaid';
 import { getAutoSidebar } from './utils/sidebar.mts';
 
 // @ts-ignore: no declaration for 'markdown-it-wikilinks'
 import markdownItWikilinks from 'markdown-it-wikilinks';
+
+import { mark } from '@mdit/plugin-mark';
 
 const locales = {
   home: { root: 'Главная', en: 'Home' },
@@ -149,9 +152,9 @@ export default withMermaid({
 
   markdown: {
     toc: { level: [1, 2, 3, 4, 5] },
-    config: (md) => {
-      md.use(markdownItWikilinks);
-    },
+    config(md) {
+      md.use(markdownItWikilinks).use(mark);
+    }
   },
 
   locales: {
