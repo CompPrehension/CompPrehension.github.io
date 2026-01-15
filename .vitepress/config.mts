@@ -1,4 +1,3 @@
-import anchor from 'markdown-it-anchor';
 import { withMermaid } from 'vitepress-plugin-mermaid';
 import { getAutoSidebar } from './utils/sidebar.mts';
 
@@ -6,6 +5,8 @@ import { getAutoSidebar } from './utils/sidebar.mts';
 import markdownItWikilinks from 'markdown-it-wikilinks';
 
 import { mark } from '@mdit/plugin-mark';
+import { tasklist } from '@mdit/plugin-tasklist';
+import { spoiler } from '@mdit/plugin-spoiler';
 
 const locales = {
   home: { root: 'Главная', en: 'Home' },
@@ -131,6 +132,16 @@ function getThemeConfig(locale: Language, localeVisibleName: string) {
   };
 }
 
+const customSlugify = (str: string) => 
+  str
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Пробелы в дефисы
+    .replace(/[^\p{L}\p{N}-]/gu, '') // Удаляем спецсимволы, сохраняем буквы (Unicode) и цифры
+    .replace(/-+/g, '-') // Убираем двойные дефисы
+    .replace(/^-+|-+$/g, ''); // Убираем дефисы по краям
+
+
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
   title: 'CompPrehension Wiki',
@@ -152,9 +163,48 @@ export default withMermaid({
 
   markdown: {
     toc: { level: [1, 2, 3, 4, 5] },
+    math: true,
+    anchor: {
+      slugify: customSlugify
+    },
     config(md) {
-      md.use(markdownItWikilinks).use(mark);
-    }
+      md.use(
+        markdownItWikilinks({
+          baseURL: '/',
+          htmlAttributes: {
+            class: 'wikilink',
+          },
+          generatePageNameFromLabel: customSlugify, 
+        })
+      )
+        .use(mark)
+        .use(tasklist, { disabled: false })
+        .use(spoiler);
+
+      const defaultNormalizeLink = md.normalizeLink;
+
+      md.normalizeLink = (url) => {
+        try {
+          // Сначала получаем стандартно обработанную ссылку и декодируем её (ваш старый код)
+          let decoded = decodeURI(defaultNormalizeLink(url));
+
+          // Если в ссылке есть якорь (решетка)
+          if (decoded.includes('#')) {
+            const [path, hash] = decoded.split('#');
+            
+            // Обрабатываем хеш той же функцией, что и заголовки
+            const cleanHash = customSlugify(hash);
+            
+            // Возвращаем путь (декодированный) + корректный якорь
+            return path + '#' + cleanHash;
+          }
+
+          return decoded;
+        } catch (e) {
+          return defaultNormalizeLink(url);
+        }
+      };
+    },
   },
 
   locales: {

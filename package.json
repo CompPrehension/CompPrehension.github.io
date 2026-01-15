@@ -8,8 +8,11 @@
   "devDependencies": {
     "@mdit-vue/plugin-toc": "^3.0.2",
     "@mdit/plugin-mark": "^0.22.1",
+    "@mdit/plugin-spoiler": "^0.22.2",
+    "@mdit/plugin-tasklist": "^0.22.2",
     "@types/node": "^24.10.1",
     "husky": "^9.1.7",
+    "markdown-it-mathjax3": "^4.3.2",
     "markdown-it-wikilinks": "^1.4.0",
     "mermaid": "^11.12.1",
     "vitepress": "^1.6.4",
