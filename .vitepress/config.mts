@@ -174,7 +174,19 @@ export default withMermaid({
           htmlAttributes: {
             class: 'wikilink',
           },
-          generatePageNameFromLabel: customSlugify, 
+          generatePageNameFromLabel: (label: string) => {
+            // Если в вики-ссылке есть якорь [[путь/файл#Заголовок]]
+            if (label.includes('#')) {
+              const [path, hash] = label.split('#');
+              // Путь очищаем минимально (только пробелы), а якорь — через customSlugify
+              return (
+                path.trim().replace(/\s+/g, '-') + '#' + customSlugify(hash)
+              );
+            }
+            // Для обычных ссылок [[docs/index]] просто меняем пробелы на дефисы,
+            // не трогая слеши и точки
+            return label.trim().replace(/\s+/g, '-');
+          },
         })
       )
         .use(mark)
