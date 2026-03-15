@@ -141,8 +141,7 @@ public CppViewer(LanguageTokenizer tokenizer)
 | `bracketsAroundCaseBranches`   | `true` — всегда оборачивать содержимое `case` в `{…}`; `false` — только при объявлении переменных|
 | `autoVariableDeclaration`      | `true` — при первом присваивании автоматически генерировать `type name = …;`                      |
 
-> TODO:
-> Перенести в configs. 
+> TODO: Перенести в configs.
 ---
 
 ## Управление отступами
