@@ -7,6 +7,10 @@ import markdownItWikilinks from 'markdown-it-wikilinks';
 import { mark } from '@mdit/plugin-mark';
 import { tasklist } from '@mdit/plugin-tasklist';
 import { spoiler } from '@mdit/plugin-spoiler';
+import { mkdirSync, writeFileSync } from 'fs';
+import { dirname, resolve } from 'path';
+import { buildRouteMappings } from './utils/routes.mts';
+import { slugifyUrlPath } from './utils/slug.mts';
 
 const locales = {
   home: { root: 'Главная', en: 'Home' },
@@ -22,8 +26,8 @@ const locales = {
     en: 'User Introduction',
   },
   sidebar_dt: {
-    ru: 'Деревья мыслительных процессов',
-    en: 'Thought Process Tree',
+    ru: 'Графы мыслительных процессов',
+    en: 'Thought Process Graph',
   },
   sidebar_main: { ru: 'Основное', en: 'Main' },
   sidebar_resources: { ru: 'Навигация по проектам', en: 'Project Resources' },
@@ -111,7 +115,7 @@ function getThemeConfig(locale: Language, localeVisibleName: string) {
               {
                 text: t('sidebar_dt'),
                 collapsed: true,
-                link: '/docs/decision_tree',
+                link: '/docs/thought_process_graph',
                 items: getAutoSidebar('docs/decision_tree'),
               },
               {
@@ -141,6 +145,44 @@ const customSlugify = (str: string) =>
     .replace(/-+/g, '-') // Убираем двойные дефисы
     .replace(/^-+|-+$/g, ''); // Убираем дефисы по краям
 
+const safeDecodeUri = (value: string) => {
+  try {
+    return decodeURI(value);
+  } catch {
+    return value;
+  }
+};
+
+const normalizeWikilinkTarget = (target: string) => {
+  const decoded = safeDecodeUri(target);
+  const [pathWithQuery, ...hashParts] = decoded.split('#');
+  const hash = hashParts.length > 0 ? hashParts.join('#') : '';
+  const [pathOnly, query] = pathWithQuery.split('?');
+  const normalizedPath = slugifyUrlPath(pathOnly);
+  const normalizedHash = hash ? customSlugify(safeDecodeUri(hash)) : '';
+  const normalizedQuery = query ? `?${query}` : '';
+  const normalizedAnchor = normalizedHash ? `#${normalizedHash}` : '';
+  return `${normalizedPath}${normalizedQuery}${normalizedAnchor}`;
+};
+
+const normalizeWikilinkMatchToken = (token: any) => {
+  const match = token?.meta?.match;
+  if (!Array.isArray(match)) return;
+  if (typeof match[0] !== 'string' || !match[0].startsWith('[[')) return;
+  if (typeof match[1] !== 'string') return;
+  match[1] = normalizeWikilinkTarget(match[1]);
+};
+
+
+const routeMappings = buildRouteMappings(process.cwd());
+const escapeRewriteSource = (sourcePath: string) =>
+  sourcePath.replace(/([.+*?^${}()[\]|\\!:])/g, '\\$1');
+const rewriteMap = Object.fromEntries(
+  routeMappings
+    .filter((m) => m.source !== m.dest)
+    .map((m) => [escapeRewriteSource(m.source), m.dest])
+);
+const redirectMappings = routeMappings.filter((m) => m.fromRoute !== m.toRoute);
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
@@ -148,6 +190,7 @@ export default withMermaid({
   titleTemplate: 'CompPrehension Wiki',
   ignoreDeadLinks: true,
   lastUpdated: true,
+  rewrites: rewriteMap,
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
@@ -171,47 +214,56 @@ export default withMermaid({
       md.use(
         markdownItWikilinks({
           baseURL: '/',
+          relativeBaseURL: '',
           htmlAttributes: {
             class: 'wikilink',
           },
-          generatePageNameFromLabel: (label: string) => {
-            // Если в вики-ссылке есть якорь [[путь/файл#Заголовок]]
-            if (label.includes('#')) {
-              const [path, hash] = label.split('#');
-              // Путь очищаем минимально (только пробелы), а якорь — через customSlugify
-              return (
-                path.trim().replace(/\s+/g, '-') + '#' + customSlugify(hash)
-              );
-            }
-            // Для обычных ссылок [[docs/index]] просто меняем пробелы на дефисы,
-            // не трогая слеши и точки
-            return label.trim().replace(/\s+/g, '-');
+          generatePagePathFromLabel: (label: string) => {
+            const [rawPath, ...rawHashParts] = label.split('#');
+            const rawHash = rawHashParts.length > 0 ? rawHashParts.join('#') : '';
+            const cleanPath = slugifyUrlPath(safeDecodeUri(rawPath.trim())).replace(/\.md$/i, '');
+            const cleanHash = rawHash ? customSlugify(safeDecodeUri(rawHash)) : '';
+            return cleanHash ? `${cleanPath}#${cleanHash}` : cleanPath;
           },
+          // Важно: применяется и к piped wikilinks [[path|label]]
+          postProcessPagePath: (pagePath: string) =>
+            slugifyUrlPath(safeDecodeUri(pagePath.trim())).replace(/\.md$/i, ''),
+          postProcessPageHash: (pageHash: string) => customSlugify(safeDecodeUri(pageHash)),
         })
       )
         .use(mark)
         .use(tasklist, { disabled: false })
         .use(spoiler);
 
+      md.core.ruler.push('normalize-wikilink-targets', (state) => {
+        for (const token of state.tokens) {
+          normalizeWikilinkMatchToken(token);
+          if (!token.children) continue;
+          for (const child of token.children) {
+            normalizeWikilinkMatchToken(child);
+          }
+        }
+      });
+
       const defaultNormalizeLink = md.normalizeLink;
 
       md.normalizeLink = (url) => {
         try {
-          // Сначала получаем стандартно обработанную ссылку и декодируем её (ваш старый код)
-          let decoded = decodeURI(defaultNormalizeLink(url));
+          const normalized = defaultNormalizeLink(url);
+          const decoded = decodeURI(normalized);
 
-          // Если в ссылке есть якорь (решетка)
-          if (decoded.includes('#')) {
-            const [path, hash] = decoded.split('#');
-            
-            // Обрабатываем хеш той же функцией, что и заголовки
-            const cleanHash = customSlugify(hash);
-            
-            // Возвращаем путь (декодированный) + корректный якорь
-            return path + '#' + cleanHash;
+          if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(decoded)) {
+            return normalized;
           }
 
-          return decoded;
+          const [pathWithQuery, hash] = decoded.split('#');
+          const [path, query] = pathWithQuery.split('?');
+          const cleanPath = slugifyUrlPath(path);
+          const cleanHash = hash ? customSlugify(hash) : '';
+          const cleanQuery = query ? `?${query}` : '';
+          const cleanAnchor = cleanHash ? `#${cleanHash}` : '';
+
+          return `${cleanPath}${cleanQuery}${cleanAnchor}`;
         } catch (e) {
           return defaultNormalizeLink(url);
         }
@@ -219,8 +271,38 @@ export default withMermaid({
     },
   },
 
+  buildEnd: async (siteConfig) => {
+    const outDir = (siteConfig as any)?.outDir ?? resolve(process.cwd(), '.vitepress/dist');
+    const base = (siteConfig as any)?.base ?? '/';
+    const basePrefix = base === '/' ? '' : base.replace(/\/+$/, '');
+
+    const withBase = (route: string) => {
+      if (!basePrefix) return route;
+      return `${basePrefix}${route.startsWith('/') ? '' : '/'}${route}`;
+    };
+
+    const toOutFile = (route: string) => {
+      let clean = route.split('#')[0].split('?')[0];
+      clean = clean.replace(/\/+$/, '');
+      if (clean.startsWith('/')) clean = clean.slice(1);
+      if (!clean) return resolve(outDir, 'index.html');
+      return resolve(outDir, clean, 'index.html');
+    };
+
+    for (const m of redirectMappings) {
+      if (m.fromRoute === m.toRoute || m.fromRoute === '/') continue;
+      const target = withBase(m.toRoute);
+      const outFile = toOutFile(m.fromRoute);
+      mkdirSync(dirname(outFile), { recursive: true });
+      const html = `<!doctype html><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; url=${target}\"><link rel=\"canonical\" href=\"${target}\"><script>location.replace(${JSON.stringify(target)})</script>`;
+      writeFileSync(outFile, html, 'utf8');
+    }
+  },
+
   locales: {
     ...getThemeConfig('ru', 'Русский'),
     ...getThemeConfig('en', 'English'),
   },
 });
+
+

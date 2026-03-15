@@ -2,6 +2,7 @@
 
 import { readdirSync, statSync, existsSync } from 'fs';
 import { join, basename } from 'path';
+import { slugifyUrlPath } from './slug.mts';
 
 /**
  * Вспомогательная функция для форматирования имени файла.
@@ -21,7 +22,8 @@ function formatFilename(file: string): string {
  * E.g., 'docs/its'
  */
 export function getAutoSidebar(dir: string): Array<object> {
-  const dirPath = join(process.cwd(), dir);
+  const normalizedDir = dir.replace(/\\/g, '/').replace(/^\/+/, '');
+  const dirPath = join(process.cwd(), normalizedDir);
   const files = readdirSync(dirPath);
 
   return files
@@ -33,17 +35,16 @@ export function getAutoSidebar(dir: string): Array<object> {
 
       if (stat.isDirectory()) {
         const indexPage = join(dirPath, file, "index.md");
+        const rawLink = `/${normalizedDir}/${file}`;
         return {
           text: formatFilename(file),
           collapsed: true,
-          items: getAutoSidebar(join(dir, file)),
-          link: existsSync(indexPage) ? `/${dir}/${file.replace(/\.md$/, '')}` : undefined
+          items: getAutoSidebar(join(normalizedDir, file)),
+          link: existsSync(indexPage) ? slugifyUrlPath(rawLink) : undefined
         };
       } else if (file.endsWith('.md')) {
-        let link = `${dir}/${file.replace(/\.md$/, '')}`;
-        if (!dir.startsWith("/")) {
-          link = '/' + link;
-        }
+        const rawLink = `/${normalizedDir}/${file.replace(/\.md$/, '')}`;
+        let link = slugifyUrlPath(rawLink);
         return {
           text: formatFilename(file),
           link: link,
