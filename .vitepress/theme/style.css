@@ -137,3 +137,11 @@
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
 
+/* Auto-expand sidebar branches that contain the current page */
+.VPSidebar .VPSidebarItem.collapsible.has-active > .items {
+  display: block;
+}
+
+.VPSidebar .VPSidebarItem.collapsible.has-active > .item .caret-icon {
+  transform: rotate(90deg);
+}
