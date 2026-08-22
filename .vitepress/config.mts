@@ -188,6 +188,15 @@ const redirectMappings = routeMappings.filter((m) => m.fromRoute !== m.toRoute);
 export default withMermaid({
   title: 'CompPrehension Wiki',
   titleTemplate: 'CompPrehension Wiki',
+
+  // Mermaid 11 imports these CommonJS modules dynamically. Pre-bundling them
+  // provides the default export expected by the browser in Vite dev mode.
+  vite: {
+    optimizeDeps: {
+      include: ['fastdom', 'fastdom/extensions/fastdom-promised.js'],
+    },
+  },
+
   ignoreDeadLinks: true,
   lastUpdated: true,
   rewrites: rewriteMap,
