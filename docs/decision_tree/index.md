@@ -39,21 +39,24 @@ title: Модель деревьев мыслительных процессов
 
 ```xml
 <dependency>
- <groupId>com.github.Max-Person</groupId>
+ <groupId>com.github.CompPrehension</groupId>
  <artifactId>its_DomainModel</artifactId>
  <version>...</version>
 </dependency>
 <dependency>
- <groupId>com.github.Max-Person</groupId>
+ <groupId>com.github.CompPrehension</groupId>
  <artifactId>its_Reasoner</artifactId>
  <version>...</version>
 </dependency>
 <dependency>
- <groupId>com.github.Max-Person</groupId>
+ <groupId>com.github.CompPrehension</groupId>
  <artifactId>its_QuestionGen</artifactId>
  <version>...</version>
 </dependency>
 ```
+
+> [!warning] О смене groupId
+> `its_DomainModel` и `its_Reasoner`, `its_QuestionGen` начиная с тестовых версий 3.0.0 используют groupId `com.github.CompPrehension` (ранее - `com.github.Max-Person`), поскольку репозитории переехали в организацию CompPrehension.
 
 - В качестве версии JitPack может принимать название ветки, тег (release tag), или хэш коммита. Для данных проектов я рекомендую указывать тег последней версии (см. GitHub -> репозиторий ->Releases -> Tags), чтобы ваш проект не сломался с обновлением библиотек.
 - В зависимости от ваших нужд, вам могут понадобиться не все из этих зависимостей.
