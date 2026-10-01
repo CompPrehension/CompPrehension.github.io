@@ -1,6 +1,6 @@
 // .vitepress/utils/sidebar.mts
 
-import { readdirSync, statSync, existsSync } from 'fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'fs';
 import { join, basename } from 'path';
 import { slugifyUrlPath } from './slug.mts';
 
@@ -20,13 +20,32 @@ function formatFilename(file: string): string {
  * Рекурсивно сканирует директорию и генерирует элементы sidebar
  * @param {string} dir - Директория для сканирования (относительно корня проекта)
  * E.g., 'docs/its'
+ * Файл _order.json задаёт порядок имён файлов (с .md) и подпапок.
+ * Неуказанные пункты добавляются в конец по алфавиту.
  */
 export function getAutoSidebar(dir: string): Array<object> {
   const normalizedDir = dir.replace(/\\/g, '/').replace(/^\/+/, '');
   const dirPath = join(process.cwd(), normalizedDir);
   const files = readdirSync(dirPath);
+  const orderPath = join(dirPath, '_order.json');
+  const order: unknown = existsSync(orderPath)
+    ? JSON.parse(readFileSync(orderPath, 'utf8').replace(/^\uFEFF/, ''))
+    : [];
+  if (!Array.isArray(order) || !order.every((name) => typeof name === 'string')) {
+    throw new Error(`${orderPath}: expected an array of file and directory names`);
+  }
+  const positions = new Map<string, number>();
+  order.forEach((name: string, index: number) => {
+    if (!positions.has(name)) positions.set(name, index);
+  });
 
   return files
+    .sort((a, b) => {
+      const aPosition = positions.get(a) ?? Infinity;
+      const bPosition = positions.get(b) ?? Infinity;
+      if (aPosition !== bPosition) return aPosition - bPosition;
+      return formatFilename(a).localeCompare(formatFilename(b));
+    })
     .map((file) => {
       const filePath = join(dirPath, file);
       const stat = statSync(filePath);
@@ -52,6 +71,5 @@ export function getAutoSidebar(dir: string): Array<object> {
       }
     })
     .filter(Boolean)
-    .filter((obj) => obj != undefined && obj != null)
-    .sort((a, b) => (a?.text as string).localeCompare(b?.text as string));
+    .filter((obj) => obj != undefined && obj != null);
 }
