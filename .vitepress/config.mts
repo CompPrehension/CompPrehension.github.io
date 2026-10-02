@@ -200,6 +200,9 @@ export default withMermaid({
   ignoreDeadLinks: true,
   lastUpdated: true,
   rewrites: rewriteMap,
+  sitemap: {
+    hostname: 'https://compprehension.github.io',
+  },
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
